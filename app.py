@@ -27,35 +27,32 @@ if uploaded_file is not None:
 
         # Check for numeric and categorical columns
         numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+        numeric_columns_with_variation = [col for col in numeric_columns if df[col].nunique() > 1]
         categorical_columns = df.select_dtypes(include=['object', 'category']).columns
 
-        # If there are both numeric and categorical columns, show them in two columns
-        if len(numeric_columns) > 0 and len(categorical_columns) > 0:
+        # Show both filters if both types of columns exist and have valid data
+        if len(numeric_columns_with_variation) > 0 and len(categorical_columns) > 0:
             col1, col2 = st.columns(2)
 
             # --- Numeric Filters ---
             with col1:
                 st.write("### Filter the numeric data:")
-                filter_column = st.selectbox("Select a numeric column to filter", numeric_columns)
+                filter_column = st.selectbox("Select a numeric column to filter", numeric_columns_with_variation)
 
                 if filter_column:
                     min_value = float(df[filter_column].min())
                     max_value = float(df[filter_column].max())
 
-                    if min_value == max_value:
-                        st.warning(
-                            f"The selected column `{filter_column}` has a unique value: {min_value}. A filter cannot be applied.")
-                    else:
-                        min_value, max_value = st.slider(
-                            f"Select the range of values for {filter_column}",
-                            min_value,
-                            max_value,
-                            (min_value, max_value)
-                        )
+                    min_value, max_value = st.slider(
+                        f"Select the range of values for {filter_column}",
+                        min_value,
+                        max_value,
+                        (min_value, max_value)
+                    )
 
-                        filtered_df = df[(df[filter_column] >= min_value) & (df[filter_column] <= max_value)]
-                        st.write(f"### Filtered data in {filter_column} between {min_value} and {max_value}:")
-                        st.dataframe(filtered_df)
+                    filtered_df = df[(df[filter_column] >= min_value) & (df[filter_column] <= max_value)]
+                    st.write(f"### Filtered data in {filter_column} between {min_value} and {max_value}:")
+                    st.dataframe(filtered_df)
 
             # --- Categorical Filters ---
             with col2:
@@ -73,30 +70,26 @@ if uploaded_file is not None:
                     st.write(f"### Filtered data in {filter_categorical_column} for selected values:")
                     st.dataframe(filtered_df)
 
-        # If there are only numeric columns
-        elif len(numeric_columns) > 0:
+        # Show only numeric filters if there are valid numeric columns
+        elif len(numeric_columns_with_variation) > 0:
             st.write("### Filter the numeric data:")
-            filter_column = st.selectbox("Select a numeric column to filter", numeric_columns)
+            filter_column = st.selectbox("Select a numeric column to filter", numeric_columns_with_variation)
 
             if filter_column:
                 min_value = float(df[filter_column].min())
                 max_value = float(df[filter_column].max())
 
-                if min_value == max_value:
-                    st.warning(
-                        f"The selected column `{filter_column}` has a unique value: {min_value}. A filter cannot be applied.")
-                else:
-                    min_value, max_value = st.slider(
-                        f"Select the range of values for {filter_column}",
-                        min_value,
-                        max_value,
-                        (min_value, max_value)
-                    )
-                    filtered_df = df[(df[filter_column] >= min_value) & (df[filter_column] <= max_value)]
-                    st.write(f"### Filtered data in {filter_column} between {min_value} and {max_value}:")
-                    st.dataframe(filtered_df)
+                min_value, max_value = st.slider(
+                    f"Select the range of values for {filter_column}",
+                    min_value,
+                    max_value,
+                    (min_value, max_value)
+                )
+                filtered_df = df[(df[filter_column] >= min_value) & (df[filter_column] <= max_value)]
+                st.write(f"### Filtered data in {filter_column} between {min_value} and {max_value}:")
+                st.dataframe(filtered_df)
 
-        # If there are only categorical columns
+        # Show only categorical filters if there are categorical columns
         elif len(categorical_columns) > 0:
             st.write("### Filter the categorical data:")
             filter_categorical_column = st.selectbox("Select a categorical column to filter", categorical_columns)
@@ -112,9 +105,9 @@ if uploaded_file is not None:
                 st.write(f"### Filtered data in {filter_categorical_column} for selected values:")
                 st.dataframe(filtered_df)
 
-        # If no numeric or categorical columns are present
+        # Show warning if no valid columns for filtering are present
         else:
-            st.warning("No numeric or categorical columns found to filter.")
+            st.warning("No numeric or categorical columns with sufficient variation to filter.")
 
     except Exception as e:
         st.error(f"Error loading the file: {e}")
