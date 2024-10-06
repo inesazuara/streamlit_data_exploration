@@ -59,6 +59,10 @@ pip install -r requirements.txt
 
 ### Usage
 
+If you want to see the deployed version of the app go to: https://app-data-exploration.streamlit.app/
+
+For using the code in your own computer:
+
 ```bash
 streamlit run app.py
 ```
